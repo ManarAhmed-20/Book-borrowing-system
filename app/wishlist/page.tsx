@@ -40,7 +40,7 @@ export default function WishlistPage() {
   };
 
   return (
-    <section className="min-h-screen text-white py-8 px-0">
+    <section className="min-h-screen text-white py-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-10 text-center text-amber-400">My Wishlist 💛</h1>
 
@@ -89,12 +89,12 @@ export default function WishlistPage() {
                         <p className="text-red-400 text-sm font-medium mt-1">Currently unavailable</p>
                       )}
                     </div>
-                  </div>
+                    </div>
 
                   <button
                     onClick={() => removeFromWishlist(book.id)}
                     className="text-sm bg-red-600 hover:bg-red-700 px-3 py-1 rounded-md transition flex-shrink-0"
-                  >
+                    >
                     Remove
                   </button>
                 </div>
@@ -106,7 +106,7 @@ export default function WishlistPage() {
               <h2 className="text-2xl font-semibold mb-6 text-amber-400">Summary</h2>
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-gray-300">
-                  <span>Total books:</span>
+                   <span>Total books:</span>
                   <span>{booksInWishlist.length}</span>
                 </div>
                 <div className="flex justify-between text-gray-300">
@@ -118,13 +118,13 @@ export default function WishlistPage() {
                 <button
                   onClick={handleBorrowSelected}
                   disabled={selectedBooks.length === 0}
-                  className="bg-amber-400 text-black font-semibold py-2 rounded-md hover:bg-amber-500 transition disabled:bg-gray-500 disabled:cursor-not-allowed"
+                   className="bg-amber-400 text-black font-semibold py-2 rounded-md hover:bg-amber-500 transition disabled:bg-gray-500 disabled:cursor-not-allowed"
                 >
                   Borrow Selected ({selectedBooks.length})
                 </button>
                 <button
                   onClick={clearWishlist}
-                  className="bg-gray-700 text-gray-200 py-2 rounded-md hover:bg-gray-600 transition"
+                   className="bg-gray-700 text-gray-200 py-2 rounded-md hover:bg-gray-600 transition"
                 >
                   Clear Wishlist
                 </button>
