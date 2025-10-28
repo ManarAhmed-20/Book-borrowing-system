@@ -121,16 +121,16 @@
   }
 }
 html, body {
-  height: 100%; /* تأكد من أن html و body يأخذان ارتفاع الشاشة بالكامل */
+  height: 100%; 
   margin: 0;
   padding: 0;
 }
 
 .main-background {
-  background-image: url('/background.jpg'); /* تأكدي من المسار الصحيح للصورة */
-  background-size: cover; /* تجعل الصورة تغطي المساحة بالكامل */
-  background-position: center; /* توسيط الصورة */
-  background-repeat: no-repeat; /* عدم تكرار الصورة */
+  background-image: url('/public/bg.svg'); 
+  background-size: cover; 
+  background-position: center; 
+  background-repeat: no-repeat; 
   background-attachment: fixed; 
   min-height: 100vh; 
 }
