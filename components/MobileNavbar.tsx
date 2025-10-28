@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { FiMenu, FiX } from 'react-icons/fi';
+import { useAuth } from '@/context/AuthContext';
 
 const MobileNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -26,7 +28,11 @@ const MobileNavbar = () => {
           <Link onClick={toggleMenu} href="/library" className="text-lg text-white py-3">Library</Link>
           <Link onClick={toggleMenu} href="/wishlist" className="text-lg text-white py-3">Wishlist</Link>
           <Link onClick={toggleMenu} href="/cart" className="text-lg text-white py-3">Cart</Link>
-          <Link onClick={toggleMenu} href="/profile" className="text-lg text-white py-3">Profile</Link>
+          {isAuthenticated ? (
+            <Link onClick={toggleMenu} href="/profile" className="text-lg text-white py-3">Profile</Link>
+          ) : (
+            <Link onClick={toggleMenu} href="/login" className="text-lg text-amber-400 font-semibold py-3">Login</Link>
+          )}
         </div>
       )}
     </nav>

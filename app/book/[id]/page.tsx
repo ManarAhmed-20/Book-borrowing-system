@@ -4,17 +4,20 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { FiStar, FiHeart, FiBell, FiShoppingCart } from 'react-icons/fi';
 import { allBooks, Book } from '@/data/books';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function BookDetailsPage() {
 
   const params = useParams();
+  const router = useRouter();
   const bookId = params.id as string;
 
   const { isInCart, addToCart, removeFromCart } = useCart();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  const { isAuthenticated } = useAuth();
 
   const book = allBooks.find(b => b.id === bookId);
 
@@ -32,6 +35,11 @@ export default function BookDetailsPage() {
 
 
   const handleCartClick = () => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
     if (inCart) {
       removeFromCart(book.id);
     } else {
@@ -46,6 +54,11 @@ export default function BookDetailsPage() {
 
 
   const handleWishlistClick = () => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
     if (inWishlist) {
       removeFromWishlist(book.id);
     } else {

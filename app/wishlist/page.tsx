@@ -5,10 +5,14 @@ import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
 import { allBooks } from '@/data/books';
 import Image from 'next/image';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function WishlistPage() {
   const { wishlistItems, removeFromWishlist, clearWishlist } = useWishlist();
   const { addToCart, isInCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
   const booksInWishlist = allBooks.filter((book) => wishlistItems.includes(book.id));
 
@@ -21,6 +25,11 @@ export default function WishlistPage() {
   };
 
   const handleBorrowSelected = () => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
     selectedBooks.forEach((bookId) => {
       if (!isInCart(bookId)) {
         addToCart(bookId);
@@ -103,7 +112,7 @@ export default function WishlistPage() {
                 <div className="flex justify-between text-gray-300">
                   <span>Selected:</span>
                   <span>{selectedBooks.length}</span>
-                 </div>
+                </div>
               </div>
               <div className="flex flex-col gap-3">
                 <button
@@ -115,13 +124,13 @@ export default function WishlistPage() {
                 </button>
                 <button
                   onClick={clearWishlist}
-                   className="bg-gray-700 text-gray-200 py-2 rounded-md hover:bg-gray-600 transition"
+                  className="bg-gray-700 text-gray-200 py-2 rounded-md hover:bg-gray-600 transition"
                 >
                   Clear Wishlist
                 </button>
               </div>
             </div>
-            </div>
+          </div>
         )}
       </div>
     </section>

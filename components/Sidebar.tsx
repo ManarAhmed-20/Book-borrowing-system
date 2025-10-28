@@ -1,9 +1,14 @@
+'use client';
+
 import Link from 'next/link';
-import { FiHome, FiBookOpen, FiHeart, FiShoppingCart, FiUser } from 'react-icons/fi';
+import { FiHome, FiBookOpen, FiHeart, FiShoppingCart, FiUser, FiLogIn } from 'react-icons/fi';
+import { useAuth } from '@/context/AuthContext';
 
 const Sidebar = () => {
+  const { isAuthenticated } = useAuth();
+
   return (
-    <aside className="fixed left-0 top-0 z-10 h-screen w-20 bg-black/20 backdrop-blur-lg flex flex-col items-center py-8 gap-8 border-r border-white/10 hidden lg:flex">
+    <aside className="fixed left-0 top-0 z-10 h-screen w-20 bg-black/20 backdrop-blur-lg flex-col items-center py-8 gap-8 border-r border-white/10 hidden lg:flex">
       <div className="text-white text-2xl font-bold">
         B
       </div>
@@ -23,9 +28,15 @@ const Sidebar = () => {
         </Link>
       </nav>
 
-      <Link href="/profile" className="text-gray-400 hover:text-white transition-colors mt-auto" aria-label="Profile">
-        <FiUser size={24} />
-      </Link>
+      {isAuthenticated ? (
+        <Link href="/profile" className="text-gray-400 hover:text-white transition-colors mt-auto" aria-label="Profile">
+          <FiUser size={24} />
+        </Link>
+      ) : (
+        <Link href="/login" className="text-gray-400 hover:text-white transition-colors mt-auto" aria-label="Login">
+          <FiLogIn size={24} />
+        </Link>
+      )}
     </aside>
   );
 };

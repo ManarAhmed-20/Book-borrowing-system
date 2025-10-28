@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import { AuthProvider } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
 import { WishlistProvider } from '@/context/WishlistContext';
 import { BorrowedProvider } from '@/context/BorrowedContext';
@@ -21,19 +22,21 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} main-background text-white`}>
-        <BorrowedProvider>
-          <WishlistProvider>
-            <CartProvider>
+        <AuthProvider>
+          <BorrowedProvider>
+            <WishlistProvider>
+              <CartProvider>
 
-              <Sidebar />
-              <HorizontalNavbar />
-              <MobileNavbar />
-              <main className="p-8 pt-24 md:pt-24 lg:pt-8 lg:ml-20">
-                {children}
-              </main>
-            </CartProvider>
-          </WishlistProvider>
-        </BorrowedProvider>
+                <Sidebar />
+                <HorizontalNavbar />
+                <MobileNavbar />
+                <main className="p-8 pt-24 md:pt-24 lg:pt-8 lg:ml-20">
+                  {children}
+                </main>
+              </CartProvider>
+            </WishlistProvider>
+          </BorrowedProvider>
+        </AuthProvider>
       </body>
     </html>
   );
