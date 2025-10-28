@@ -1,29 +1,22 @@
 import type { Config } from 'tailwindcss'
-const plugin = require('tailwindcss/plugin')
 
 const config: Config = {
+  // 1. هذا هو السطر الأهم لحل مشكلة الخلفية
+  darkMode: 'class', 
+  
+  // 2. تأكد أن هذه المسارات صحيحة
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
-    extend: {},
+    extend: {
+      // يمكنك إضافة أي theme مخصص هنا
+    },
   },
-  plugins: [
-    plugin(function ({ addUtilities }: { addUtilities: any }) {
-      addUtilities({
-        '.transform-style-3d': {
-          'transform-style': 'preserve-3d',
-        },
-        '.perspective-1000': {
-          'perspective': '1000px',
-        },
-        '.backface-hidden': {
-          'backface-visibility': 'hidden',
-        },
-      })
-    }),
-  ],
+   plugins: [
+   require('tailwindcss-animate'), // <--- هذا هو السطر الصحيح
+ ],
 }
 export default config

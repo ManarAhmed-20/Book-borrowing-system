@@ -40,7 +40,7 @@ const BookCard = ({ id, title, author, imageUrl, price }: BookCardProps) => {
   return (
     <Link href={`/book/${id}`} className="group w-fit">
       <div
-        className="w-[110px] h-[166px] bg-gray-800 shadow-lg rounded-2xl flex flex-col items-end gap-2
+        className="w-[110px] h-[166px] bg-black shadow-lg rounded-2xl flex flex-col items-end gap-2
                   transition-transform duration-300 ease-in-out group-hover:scale-105 group-hover:-translate-y-2 relative"
       >
         <button
