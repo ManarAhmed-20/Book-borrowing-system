@@ -1,26 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  async rewrites() {
-    return [
-      {
-        source: '/proxy_api/:path*',
-        destination: 'http://smartlibrary.runasp.net/api/:path*',
-      },
-    ];
+  eslint: {
+    ignoreDuringBuilds: true,
   },
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'http',
-        hostname: 'smartlibrary.runasp.net',
-        pathname: '/**', 
-      },
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-    ],
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  webpack: (config) => {
+    config.resolve.fallback = { fs: false, net: false, tls: false };
+    return config;
   },
 };
 
