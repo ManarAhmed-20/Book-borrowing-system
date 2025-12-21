@@ -1,51 +1,75 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { borrowService } from '@/services/borrowService';
+import { useAuth } from './AuthContext';
 
 export interface BorrowedItem {
-  bookId: string;
-  borrowDate: Date;
+  id: number;
+  userId?: string | null;
+  bookId: number;
+  userName?: string | null;
+  bookTitle: string;
+  borrowDate: string;
+  returnDate?: string;
+  isReturned: boolean;
 }
 
 interface BorrowedContextType {
   borrowedItems: BorrowedItem[];
-  borrowBooks: (bookIds: string[]) => void;
+  refreshBorrowedBooks: () => Promise<void>;
+  returnBook: (borrowId: number) => Promise<void>;
 }
 
 const BorrowedContext = createContext<BorrowedContextType | undefined>(undefined);
 
 export const BorrowedProvider = ({ children }: { children: ReactNode }) => {
+  const { isAuthenticated, isLoading, logout } = useAuth();
   const [borrowedItems, setBorrowedItems] = useState<BorrowedItem[]>([]);
-  const [isMounted, setIsMounted] = useState(false);
 
-  useEffect(() => {
-    const storedItems = localStorage.getItem('borrowedItems');
-    if (storedItems) {
-      const parsedData = JSON.parse(storedItems).map((item: any) => ({
-        ...item,
-        borrowDate: new Date(item.borrowDate),
-      }));
-      setBorrowedItems(parsedData);
+  const refreshBorrowedBooks = async () => {
+    if (isLoading || !isAuthenticated) {
+      setBorrowedItems([]);
+      return;
     }
-    setIsMounted(true);
-  }, []);
 
-  useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem('borrowedItems', JSON.stringify(borrowedItems));
+    try {
+      const data = await borrowService.getMyBorrowedBooks();
+      setBorrowedItems(data.filter((item: BorrowedItem) => !item.isReturned));
+    } catch (error: any) {
+      console.error("Failed to fetch borrowed books", error);
+      if (error.response?.status === 401) {
+        logout();
+      }
+      setBorrowedItems([]);
     }
-  }, [borrowedItems, isMounted]);
-
-  const borrowBooks = (bookIds: string[]) => {
-    const newItems: BorrowedItem[] = bookIds.map(id => ({
-      bookId: id,
-      borrowDate: new Date(),
-    }));
-    setBorrowedItems(prevItems => [...prevItems, ...newItems]);
   };
 
+  const returnBook = async (borrowId: number) => {
+    try {
+      await borrowService.returnBook(borrowId);
+      await refreshBorrowedBooks();
+    } catch (error: any) {
+      console.error("Error returning book", error);
+      if (error.response?.status === 401) {
+        logout();
+      }
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (isAuthenticated) {
+        refreshBorrowedBooks();
+      } else {
+        setBorrowedItems([]);
+      }
+    }
+  }, [isAuthenticated, isLoading]);
+
   return (
-    <BorrowedContext.Provider value={{ borrowedItems, borrowBooks }}>
+    <BorrowedContext.Provider value={{ borrowedItems, refreshBorrowedBooks, returnBook }}>
       {children}
     </BorrowedContext.Provider>
   );

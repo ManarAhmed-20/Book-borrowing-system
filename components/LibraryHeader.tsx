@@ -16,16 +16,16 @@ const LibraryHeader = ({ searchQuery, onSearchChange }: LibraryHeaderProps) => {
       <h1 className="text-4xl md:text-5xl font-bold my-4 text-white">
         Explore and Search for <span className="text-amber-400">Any Book</span> In Our Library
       </h1>
-      
+
       <div className="relative max-w-lg mx-auto mt-8">
-        <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
           placeholder="Search by title or author..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full bg-[#1e2333] border border-gray-700 rounded-lg py-3 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className="w-full bg-black/20 backdrop-blur-md border border-white/30 rounded-lg py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all shadow-lg focus:shadow-amber-500/20"
         />
+        <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
       </div>
     </header>
   );

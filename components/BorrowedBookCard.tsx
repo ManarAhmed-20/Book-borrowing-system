@@ -1,10 +1,15 @@
-import { Book } from '@/data/books';
+'use client';
+
+import { ApiBook } from '@/types';
 import Image from 'next/image';
-import { FiCalendar, FiAlertCircle } from 'react-icons/fi';
+import { FiAlertCircle, FiCalendar } from 'react-icons/fi';
 
 interface BorrowedBookCardProps {
-  book: Book;
+  book: ApiBook;
   borrowDate: Date;
+  onReturn: () => void;
+  disabled?: boolean;
+  categoryName?: string; 
 }
 
 const getDaysDifference = (date1: Date, date2: Date) => {
@@ -12,61 +17,86 @@ const getDaysDifference = (date1: Date, date2: Date) => {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
 
-const BorrowedBookCard = ({ book, borrowDate }: BorrowedBookCardProps) => {
+const BorrowedBookCard = ({ book, borrowDate, onReturn, disabled, categoryName }: BorrowedBookCardProps) => {
   const borrowPeriodDays = 7;
-
-  const dueDate = new Date(borrowDate);
+  const dateObj = new Date(borrowDate);
+  const dueDate = new Date(dateObj);
   dueDate.setDate(dueDate.getDate() + borrowPeriodDays);
 
   const today = new Date();
-
   const todayStart = new Date(today.setHours(0, 0, 0, 0));
   const dueDateStart = new Date(dueDate.setHours(0, 0, 0, 0));
-
   const daysLeft = getDaysDifference(todayStart, dueDateStart);
+
+  const baseUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL?.replace(/\/$/, '') || '';
+
+  const rawImage = book.image || book.imageUrl || '';
+  const cleanPath = rawImage.replace(/^\//, '');
+  const resolvedImage = rawImage
+    ? (rawImage.startsWith('http') ? rawImage : `${baseUrl}/${cleanPath}`)
+    : '/images/placeholder.jpg';
 
   const renderStatus = () => {
     if (daysLeft > 0) {
       return (
-        <span className="flex items-center gap-2 text-gray-400">
-          <FiCalendar />
-          {daysLeft} {daysLeft === 1 ? 'day' : 'days'} left to due
+        <span className="flex items-center gap-1.5 text-green-400 font-medium text-sm">
+          <FiCalendar /> {daysLeft} {daysLeft === 1 ? 'day' : 'days'} left
         </span>
       );
     }
     if (daysLeft === 0) {
       return (
-        <span className="flex items-center gap-2 text-yellow-400 font-medium">
-          <FiAlertCircle />
-          Due today
+        <span className="flex items-center gap-1.5 text-yellow-400 font-bold text-sm">
+          <FiAlertCircle /> Due Today
         </span>
       );
     }
     return (
-      <span className="flex items-center gap-2 text-red-500 font-medium">
-        <FiAlertCircle />
-        Overdue Return
+      <span className="flex items-center gap-1.5 text-red-500 font-bold text-sm">
+        <FiAlertCircle /> Overdue ({Math.abs(daysLeft)})
       </span>
     );
   };
 
   return (
-    <div className="bg-black/20 backdrop-blur-md border border-white/30  rounded-lg p-4 flex flex-col gap-4 shadow-lg">
-      <div className="relative w-full h-56 rounded-md overflow-hidden">
+    <div className="bg-black/20 backdrop-blur-md border border-white/30 rounded-lg p-3 flex flex-col gap-3 shadow-lg h-full">
+      <div className="relative w-full h-48 rounded-md overflow-hidden flex-shrink-0">
         <Image
-          src={book.imageUrl}
+          src={resolvedImage}
           alt={book.title}
           fill
-          className="object-cover"
+          className="object-cover transition-transform duration-500 hover:scale-110"
+          sizes="(max-width: 768px) 100vw, 300px"
         />
+        <div className="absolute top-2 right-2 bg-black/60 border border-white/10 px-2 py-0.5 rounded-full text-[10px] text-white backdrop-blur-sm shadow-sm">
+          {dateObj.toLocaleDateString('en-GB')}
+        </div>
       </div>
-      <div>
-        <h3 className="font-bold text-white truncate">{book.title}</h3>
-        <p className="text-sm text-gray-400 truncate">{book.author}</p>
-        <p className="text-xs text-gray-500 mt-1">{book.category}</p>
+
+      <div className="flex flex-col gap-0.5">
+        <h3 className="font-bold text-white truncate text-base" title={book.title}>
+          {book.title}
+        </h3>
+        <p className="text-xs text-gray-300 truncate">
+          {book.author}
+        </p>
+        <p className="text-[10px] text-blue-300/80 bg-blue-900/20 px-2 py-0.5 rounded-full w-fit mt-1">
+          {categoryName || 'General'}
+        </p>
       </div>
-      <div className="text-sm mt-auto border-t border-gray-700 pt-3">
-        {renderStatus()}
+
+      <div className="mt-auto border-t border-white/10 pt-3 flex items-center justify-between gap-2">
+        <div className="text-sm">
+          {renderStatus()}
+        </div>
+
+        <button
+          onClick={onReturn}
+          disabled={disabled}
+          className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-4 py-1.5 text-xs rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md whitespace-nowrap"
+        >
+          {disabled ? '...' : 'Return'}
+        </button>
       </div>
     </div>
   );

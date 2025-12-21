@@ -1,10 +1,15 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+import { authService } from '@/services/authService';
+import { LoginDto, RegisterDto } from '@/types';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: () => void;
+  isLoading: boolean;
+  login: (data: LoginDto) => Promise<void>;
+  register: (data: RegisterDto) => Promise<void>;
   logout: () => void;
 }
 
@@ -12,38 +17,55 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    const storedAuth = localStorage.getItem('isAuthenticated');
-    if (storedAuth === 'true') {
+    const token = localStorage.getItem('token');
+    if (token) {
       setIsAuthenticated(true);
     }
-    setIsMounted(true);
+    setIsLoading(false);
   }, []);
 
-  const login = () => {
-    setIsAuthenticated(true);
-    if (isMounted) {
-      localStorage.setItem('isAuthenticated', 'true');
+  const login = async (data: LoginDto) => {
+    try {
+      const response: any = await authService.login(data);
+      let tokenToSave = '';
+
+      if (response?.data?.token) {
+        tokenToSave = response.data.token;
+      } else if (response?.token) {
+        tokenToSave = response.token;
+      } else if (typeof response === 'string') {
+        tokenToSave = response;
+      }
+
+      if (tokenToSave) {
+        localStorage.setItem('token', tokenToSave);
+        setIsAuthenticated(true);
+        router.push('/profile');
+      } else {
+        throw new Error('No token received');
+      }
+    } catch (error) {
+      console.error("Login Failed", error);
+      throw error;
     }
+  };
+
+  const register = async (data: RegisterDto) => {
+    await authService.register(data);
   };
 
   const logout = () => {
-    setIsAuthenticated(false);
-    if (isMounted) {
-      localStorage.removeItem('isAuthenticated');
-    }
-  };
-
-  useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem('isAuthenticated', String(isAuthenticated));
-    }
-  }, [isAuthenticated, isMounted]);
+  localStorage.removeItem('token');
+  setIsAuthenticated(false);
+  router.push('/login');
+};
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, isLoading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -51,8 +73,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };

@@ -27,7 +27,6 @@ const MobileNavbar = () => {
           <Link onClick={toggleMenu} href="/" className="text-lg text-white py-3">Home</Link>
           <Link onClick={toggleMenu} href="/library" className="text-lg text-white py-3">Library</Link>
           <Link onClick={toggleMenu} href="/wishlist" className="text-lg text-white py-3">Wishlist</Link>
-          <Link onClick={toggleMenu} href="/cart" className="text-lg text-white py-3">Cart</Link>
           {isAuthenticated ? (
             <Link onClick={toggleMenu} href="/profile" className="text-lg text-white py-3">Profile</Link>
           ) : (

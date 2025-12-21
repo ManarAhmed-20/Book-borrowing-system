@@ -1,72 +1,143 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { authService } from '@/services/authService';
 
 export default function RegisterPage() {
+  const router = useRouter();
+  
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    username: '',
+    email: '',
+    phoneNumber: '',
+    password: '',
+    confirmPassword: ''
+  });
+
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const { confirmPassword, ...registerData } = formData;
+      await authService.register(registerData);
+      
+      alert('Account created successfully! Please login.');
+      router.push('/login');
+      
+    } catch (err: any) {
+      console.log("Registration Error:", err.response?.data);
+
+      let errorMsg = 'Something went wrong. Please try again.';
+
+      if (err.response?.data) {
+        const data = err.response.data;
+
+        if (data.message) {
+          errorMsg = data.message;
+        }
+        else if (data.errors) {
+          const messages = Object.values(data.errors).flat().join('\n');
+          errorMsg = messages || errorMsg;
+        }
+        else if (typeof data === 'string') {
+          errorMsg = data;
+        }
+        else if (data.title) {
+          errorMsg = data.title;
+        }
+      }
+
+      setError(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center xl:mt-0 md:mt-0">
-      <div className="flex w-full h-screen xl:h-fit max-w-5xl rounded-lg overflow-hidden shadow-2xl">
-
-
-        <div className="w-full md:w-1/2 p-8 md:p-12 bg-[#121622]">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="flex w-full max-w-5xl rounded-lg overflow-hidden shadow-2xl bg-[#121622]">
+        
+        <div className="w-full md:w-1/2 p-8 md:p-12">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white">Create Your Account</h1>
-            <p className="text-gray-400 mt-2">Join BookWise and start your reading journey today.</p>
+            <p className="text-gray-400 mt-2">Join BookWise today.</p>
           </div>
 
-          <form className="space-y-6">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-300">
-                Full Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                className="mt-1 block w-full bg-[#1e2333] border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                placeholder="John Doe"
-              />
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded text-red-500 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleRegisterSubmit} className="space-y-4">
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300">First Name</label>
+                <input name="firstName" type="text" required onChange={handleChange} className="mt-1 block w-full bg-[#1e2333] border border-gray-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300">Last Name</label>
+                <input name="lastName" type="text" required onChange={handleChange} className="mt-1 block w-full bg-[#1e2333] border border-gray-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500" />
+              </div>
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="mt-1 block w-full bg-[#1e2333] border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                placeholder="you@example.com"
-              />
+              <label className="block text-sm font-medium text-gray-300">Username</label>
+              <input name="username" type="text" required onChange={handleChange} className="mt-1 block w-full bg-[#1e2333] border border-gray-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500" />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="mt-1 block w-full bg-[#1e2333] border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                placeholder="Choose a strong password"
-              />
+              <label className="block text-sm font-medium text-gray-300">Email</label>
+              <input name="email" type="email" required onChange={handleChange} className="mt-1 block w-full bg-[#1e2333] border border-gray-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500" />
             </div>
 
             <div>
-              <button
-                type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-black bg-amber-400 hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors"
-              >
-                Create Account
-              </button>
+              <label className="block text-sm font-medium text-gray-300">Phone Number</label>
+              <input name="phoneNumber" type="tel" required onChange={handleChange} className="mt-1 block w-full bg-[#1e2333] border border-gray-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500" />
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300">Password</label>
+                <input name="password" type="password" required onChange={handleChange} className="mt-1 block w-full bg-[#1e2333] border border-gray-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300">Confirm Password</label>
+                <input name="confirmPassword" type="password" required onChange={handleChange} className="mt-1 block w-full bg-[#1e2333] border border-gray-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500" />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-black bg-amber-400 hover:bg-amber-500 transition-colors mt-6 disabled:opacity-50"
+            >
+              {isLoading ? 'Creating Account...' : 'Sign Up'}
+            </button>
           </form>
 
-          <p className="mt-8 text-center text-sm text-gray-400">
+          <p className="mt-6 text-center text-sm text-gray-400">
             Already have an account?{' '}
             <Link href="/login" className="font-medium text-amber-400 hover:text-amber-500">
               Login here
@@ -74,17 +145,14 @@ export default function RegisterPage() {
           </p>
         </div>
 
-
         <div className="hidden md:block md:w-1/2 relative">
           <Image
             src="/images/login-bg.jpg"
-            alt="A collection of books"
+            alt="Library background"
             fill
             className="object-cover"
-            sizes="50vw"
           />
         </div>
-
       </div>
     </div>
   );

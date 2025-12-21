@@ -1,135 +1,200 @@
 'use client';
 
-import { useState } from 'react';
-import { useWishlist } from '@/context/WishlistContext';
-import { useCart } from '@/context/CartContext';
-import { allBooks } from '@/data/books';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
+import { FiTrash2, FiEye, FiBook } from 'react-icons/fi';
+import { useWishlist } from '@/context/WishlistContext';
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
+import { bookService } from '@/services/bookService';
+import { categoryService, Category } from '@/services/categoryService';
+import { ApiBook } from '@/types';
 
 export default function WishlistPage() {
-  const { wishlistItems, removeFromWishlist, clearWishlist } = useWishlist();
-  const { addToCart, isInCart } = useCart();
+  const { favoriteBooks, removeFromWishlist, refreshWishlist } = useWishlist();
   const { isAuthenticated } = useAuth();
-  const router = useRouter();
-  const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
-  const booksInWishlist = allBooks.filter((book) => wishlistItems.includes(book.id));
+  
+  const [booksDetails, setBooksDetails] = useState<ApiBook[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleCheckboxChange = (bookId: string) => {
-    setSelectedBooks((prevSelected) =>
-      prevSelected.includes(bookId)
-        ? prevSelected.filter((id) => id !== bookId)
-        : [...prevSelected, bookId]
-    );
-  };
+  useEffect(() => {
+    if (!isAuthenticated) return;
 
-  const handleBorrowSelected = () => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
+    const fetchData = async () => {
+      try {
+        setLoading(true);
 
-    selectedBooks.forEach((bookId) => {
-      if (!isInCart(bookId)) {
-        addToCart(bookId);
+        try {
+          const cats = await categoryService.getAll();
+          setCategories(cats);
+        } catch (err) {
+          console.error(err);
+        }
+
+        const details = await Promise.all(
+          favoriteBooks.map(async (fav) => {
+            try {
+              const book = await bookService.getById(fav.bookId);
+              return book;
+            } catch {
+              return null;
+            }
+          })
+        );
+        setBooksDetails(details.filter((b): b is ApiBook => b !== null));
+
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
       }
-      removeFromWishlist(bookId);
-    });
-    setSelectedBooks([]);
+    };
+
+    if (favoriteBooks.length > 0) {
+      fetchData();
+    } else {
+      setBooksDetails([]);
+      setLoading(false);
+    }
+  }, [favoriteBooks, isAuthenticated]);
+
+  const getCategoryName = (id: number) => {
+    const cat = categories.find((c) => c.id === id);
+    return cat ? cat.name : id;
   };
+
+  const getImageUrl = (imageUrl?: string) => {
+    const baseUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'http://smartlibrary.runasp.net/';
+    const filename = imageUrl ? imageUrl.split('/').pop() : '';
+    return filename ? `${baseUrl}images/${filename}` : '/images/placeholder.jpg';
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white">
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl font-bold">Login Required</h1>
+          <Link href="/login" className="inline-block bg-amber-500 text-black px-6 py-3 rounded-lg font-bold hover:bg-amber-600 transition">
+            Go to Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <section className="min-h-screen text-white py-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-10 text-center text-amber-400">My Wishlist 💛</h1>
+    <section className="min-h-screen py-8 px-3 md:px-6 text-white">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-2xl md:text-3xl font-bold mb-8 text-amber-400 border-b border-gray-800 pb-4">
+          My Wishlist
+        </h1>
 
-        {booksInWishlist.length === 0 ? (
-          <div className="text-center text-gray-400 text-lg mt-20">
-            💫 Your wishlist is empty! Start adding your favorite books.
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+          </div>
+        ) : booksDetails.length === 0 ? (
+          <div className="text-center py-20 bg-black/60 rounded-xl border border-dashed border-gray-700">
+            <FiBook size={48} className="mx-auto text-gray-500 mb-4" />
+            <p className="text-xl text-gray-300">Your wishlist is empty!</p>
+            <p className="text-gray-500 mt-2 mb-6">Start adding your favorite books to read them later.</p>
+            <Link href="/library" className="bg-amber-500 text-black px-6 py-2 rounded-lg font-bold hover:bg-amber-600 transition">
+              Browse Library
+            </Link>
           </div>
         ) : (
-          <div className="grid md:grid-cols-3 gap-10">
-            <div className="md:col-span-2 space-y-6">
-              {booksInWishlist.map((book) => (
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+            <div className="md:col-span-2 space-y-4">
+              {booksDetails.map((book, index) => (
                 <div
                   key={book.id}
-
-                  className="flex items-center justify-between gap-4 bg-[#1e2333] rounded-xl p-4 shadow-md"
+                  className="bg-black/20 backdrop-blur-md border border-white/30 rounded-lg p-3 sm:p-4 flex gap-3 sm:gap-4 shadow-lg hover:shadow-xl transition-all"
                 >
-
-                  <div className="flex items-center gap-4 min-w-0">
-                    {book.availableCopies > 0 ? (
-                      <input
-                        type="checkbox"
-                        checked={selectedBooks.includes(book.id)}
-                        onChange={() => handleCheckboxChange(book.id)}
-                        className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-amber-500 focus:ring-amber-500 cursor-pointer flex-shrink-0"
-                      />
-                    ) : (
-                      <div className="w-5 h-5 flex-shrink-0"></div>
-                    )}
-
+                  <div className="relative w-20 h-28 sm:w-24 sm:h-36 flex-shrink-0 rounded-lg overflow-hidden bg-gray-800">
                     <Image
-                      src={book.imageUrl}
+                      src={getImageUrl(book.image || book.imageUrl)}
                       alt={book.title}
-                      width={50}
-                      height={65}
-                      className="rounded-md object-cover flex-shrink-0"
+                      fill
+                      className="object-cover"
+                      sizes="100px"
+                      priority={index < 2}
                     />
+                  </div>
 
-                    <div className="min-w-0">
+                  <div className="flex flex-col justify-between flex-grow min-w-0">
+                    <div>
+                      <div className="flex justify-between items-start gap-2">
+                        <h3 className="text-base sm:text-xl font-bold text-white truncate pr-2">{book.title}</h3>
+                        <p className="text-amber-400 font-bold whitespace-nowrap text-sm sm:text-base">
+                          ${(book.price || 0).toFixed(2)}
+                        </p>
+                      </div>
+                      <p className="text-gray-400 text-xs sm:text-sm mb-2">{book.author}</p>
 
-                      <h3 className="font-semibold text-lg truncate">{book.title}</h3>
-                      <p className="text-gray-400 text-sm truncate">{book.author}</p>
-
-                      {book.availableCopies > 0 ? (
-                        <p className="text-amber-400 font-medium mt-1">${book.price.toFixed(2)}</p>
-                      ) : (
-                        <p className="text-red-400 text-sm font-medium mt-1">Currently unavailable</p>
-                      )}
+                      <div className="flex flex-wrap items-center gap-2 text-[10px] sm:text-xs text-gray-500">
+                        <span className={`px-2 py-0.5 sm:py-1 rounded-full ${book.availableCopies > 0 ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
+                          {book.availableCopies > 0 ? 'In Stock' : 'Out of Stock'}
+                        </span>
+                        <span className="bg-blue-500/20 text-blue-300 px-2 py-0.5 sm:py-1 rounded-full truncate max-w-[100px]">
+                           {getCategoryName(book.categoryId)}
+                        </span>
+                      </div>
                     </div>
-                    </div>
 
-                  <button
-                    onClick={() => removeFromWishlist(book.id)}
-                    className="text-sm bg-red-600 hover:bg-red-700 px-3 py-1 rounded-md transition flex-shrink-0"
-                    >
-                    Remove
-                  </button>
+                    <div className="flex items-center gap-2 sm:gap-3 mt-3 sm:mt-4">
+                      <Link
+                        href={`/book/${book.id}`}
+                        className="flex items-center gap-1.5 sm:gap-2 bg-amber-500 hover:bg-amber-600 text-black px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition flex-1 justify-center"
+                      >
+                        <FiEye className="w-3 h-3 sm:w-4 sm:h-4" /> View & Borrow
+                      </Link>
+
+                      <button
+                        onClick={() => removeFromWishlist(book.id.toString())}
+                        className="flex items-center gap-2 bg-white/10 hover:bg-red-600/80 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition border border-white/5"
+                        title="Remove from wishlist"
+                      >
+                        <FiTrash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
 
+            <div className="md:col-span-1">
+              <div className="bg-black/60 backdrop-blur-lg rounded-xl p-5 sm:p-6 shadow-lg sticky top-24 hover:shadow-2xl transition-all border border-white/10 hover:border-gray-500">
+                <h2 className="text-xl sm:text-2xl font-bold text-amber-400 mb-4 sm:mb-6">Summary</h2>
 
-            <div className="bg-[#1e2333] rounded-xl p-6 shadow-lg h-fit md:sticky md:top-24">
-              <h2 className="text-2xl font-semibold mb-6 text-amber-400">Summary</h2>
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between text-gray-300">
-                   <span>Total books:</span>
-                  <span>{booksInWishlist.length}</span>
+                <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+                  <div className="flex justify-between items-center text-gray-300 pb-3 sm:pb-4 border-b border-gray-700 text-sm sm:text-base">
+                    <span>Total Books</span>
+                    <span className="font-bold text-white">{booksDetails.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-gray-300 text-sm sm:text-base">
+                    <span>Available to Borrow</span>
+                    <span className="text-gray-300 font-bold">
+                      {booksDetails.filter(b => b.availableCopies > 0).length}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between text-gray-300">
-                  <span>Selected:</span>
-                  <span>{selectedBooks.length}</span>
+
+                <div className="bg-blue-900/10 border border-blue-500/20 p-3 sm:p-4 rounded-lg mb-6">
+                  <p className="text-xs sm:text-sm text-blue-200">
+                    <strong>Tip:</strong> Click "View & Borrow" to proceed with borrowing.
+                  </p>
                 </div>
-              </div>
-              <div className="flex flex-col gap-3">
+
                 <button
-                  onClick={handleBorrowSelected}
-                  disabled={selectedBooks.length === 0}
-                   className="bg-amber-400 text-black font-semibold py-2 rounded-md hover:bg-amber-500 transition disabled:bg-gray-500 disabled:cursor-not-allowed"
+                  onClick={refreshWishlist}
+                  className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition"
                 >
-                  Borrow Selected ({selectedBooks.length})
-                </button>
-                <button
-                  onClick={clearWishlist}
-                   className="bg-gray-700 text-gray-200 py-2 rounded-md hover:bg-gray-600 transition"
-                >
-                  Clear Wishlist
+                  Refresh List
                 </button>
               </div>
             </div>
+
           </div>
         )}
       </div>

@@ -1,56 +1,83 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useAuth } from './AuthContext';
+import { wishlistService } from '@/services/wishlistService';
+
+export interface FavoriteBook {
+  bookId: number;
+  title: string;
+  author: string;
+}
 
 interface WishlistContextType {
-  wishlistItems: string[];
-  addToWishlist: (bookId: string) => void;
-  removeFromWishlist: (bookId: string) => void;
+  favoriteBooks: FavoriteBook[];
   isInWishlist: (bookId: string) => boolean;
-  clearWishlist: () => void;
+  addToWishlist: (book: any) => void;
+  removeFromWishlist: (bookId: string) => void;
+  refreshWishlist: () => void;
 }
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
 export const WishlistProvider = ({ children }: { children: ReactNode }) => {
-  const [wishlistItems, setWishlistItems] = useState<string[]>([]);
-  const [isMounted, setIsMounted] = useState(false);
+  const { isAuthenticated, isLoading } = useAuth();
+  const [favoriteBooks, setFavoriteBooks] = useState<FavoriteBook[]>([]);
 
-  useEffect(() => {
-    const storedItems = localStorage.getItem('wishlistItems');
-    if (storedItems) {
-      setWishlistItems(JSON.parse(storedItems));
+  const refreshWishlist = async () => {
+    if (isLoading || !isAuthenticated) return;
+
+    try {
+      const data = await wishlistService.getWishlist();
+      setFavoriteBooks(data);
+    } catch (error: any) {
+      console.error("Failed to fetch wishlist", error);
+      setFavoriteBooks([]); 
     }
-    setIsMounted(true);
-  }, []);
-
-  
-  useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem('wishlistItems', JSON.stringify(wishlistItems));
-    }
-  }, [wishlistItems, isMounted]);
-
-  const addToWishlist = (bookId: string) => {
-    setWishlistItems(prevItems => [...prevItems, bookId]);
   };
 
-  const removeFromWishlist = (bookId: string) => {
-    setWishlistItems(prevItems => prevItems.filter(id => id !== bookId));
-  };
+  useEffect(() => {
+    if (!isLoading) {
+      if (isAuthenticated) {
+        refreshWishlist();
+      } else {
+        setFavoriteBooks([]);
+      }
+    }
+  }, [isAuthenticated, isLoading]);
 
   const isInWishlist = (bookId: string) => {
-    return wishlistItems.includes(bookId);
+    return favoriteBooks.some(book => book.bookId.toString() === bookId);
   };
 
-  const clearWishlist = () => {
-    setWishlistItems([]);
+  const addToWishlist = async (book: any) => {
+    if (!isAuthenticated) return;
+    try {
+      await wishlistService.addToWishlist(book.id);
+      await refreshWishlist();
+    } catch (error) {
+      console.error("Failed to add to wishlist", error);
+    }
+  };
+
+  const removeFromWishlist = async (bookId: string) => {
+    if (!isAuthenticated) return;
+    try {
+      await wishlistService.removeFromWishlist(bookId);
+      await refreshWishlist();
+    } catch (error) {
+      console.error("Failed to remove from wishlist", error);
+    }
   };
 
   return (
-    <WishlistContext.Provider 
-      value={{ wishlistItems, addToWishlist, removeFromWishlist, isInWishlist, clearWishlist }}
-    >
+    <WishlistContext.Provider value={{ 
+      favoriteBooks, 
+      isInWishlist, 
+      addToWishlist, 
+      removeFromWishlist, 
+      refreshWishlist 
+    }}>
       {children}
     </WishlistContext.Provider>
   );
@@ -58,8 +85,6 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
 
 export const useWishlist = () => {
   const context = useContext(WishlistContext);
-  if (context === undefined) {
-    throw new Error('useWishlist must be used within a WishlistProvider');
-  }
+  if (!context) throw new Error('useWishlist must be used within a WishlistProvider');
   return context;
 };

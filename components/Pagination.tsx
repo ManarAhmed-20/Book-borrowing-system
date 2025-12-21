@@ -66,7 +66,6 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
   return (
     <nav className="flex justify-center items-center gap-2 mt-16">
       
-      {/* --- 1. الترقيم الكامل (للتابلت والديسكتوب) --- */}
       <div className="hidden md:flex items-center gap-2">
         <button
           onClick={() => onPageChange(currentPage - 1)}
@@ -87,7 +86,6 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
         </button>
       </div>
 
-      {/* --- 2. الترقيم المبسط (للموبايل فقط) --- */}
       <div className="flex md:hidden items-center gap-4">
         <button
           onClick={() => onPageChange(currentPage - 1)}

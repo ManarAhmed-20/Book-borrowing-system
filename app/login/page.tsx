@@ -1,78 +1,123 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
+  const { login } = useAuth();
+  
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    try {
+      await login(formData);
+    } catch (err: any) {
+      let errorMsg = 'Invalid email or password.';
+
+      if (err.response?.data) {
+        const data = err.response.data;
+
+        if (data.message) {
+          errorMsg = data.message;
+        } else if (data.title) {
+          errorMsg = data.title;
+        } else if (typeof data === 'string') {
+          errorMsg = data;
+        }
+      }
+
+      setError(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center xl:mt-0 md:mt-0">
-      <div className="flex w-full h-screen xl:h-fit max-w-5xl rounded-lg overflow-hidden shadow-2xl">
-
-
-        <div className="w-full md:w-1/2 p-8 md:p-12 bg-[#121622]">
+    <div className="min-h-screen flex items-center justify-center -m-8">
+      <div className="flex w-full max-w-5xl rounded-lg overflow-hidden shadow-2xl">
+        
+        <form onSubmit={handleLoginSubmit} className="w-full md:w-1/2 p-8 md:p-12 bg-[#121622]">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white">Welcome Back to the BookWise</h1>
-            <p className="text-gray-400 mt-2">Access the vast collection of resources, and stay updated</p>
+            <h1 className="text-3xl font-bold text-white">Welcome Back</h1>
+            <p className="text-gray-400 mt-2">Login to access your library account</p>
           </div>
 
-          <form className="space-y-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded text-red-500 text-sm">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300">
-                Email
-              </label>
+              <label className="block text-sm font-medium text-gray-300">Email</label>
               <input
-                id="email"
                 name="email"
                 type="email"
-                autoComplete="email"
                 required
-                className="mt-1 block w-full bg-[#1e2333] border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                value={formData.email}
+                onChange={handleChange}
+                className="mt-1 block w-full bg-[#1e2333] border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 placeholder="you@example.com"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300">
-                Password
-              </label>
+              <label className="block text-sm font-medium text-gray-300">Password</label>
               <input
-                id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
                 required
-                className="mt-1 block w-full bg-[#1e2333] border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                placeholder="Atleast 8 characters long"
+                value={formData.password}
+                onChange={handleChange}
+                className="mt-1 block w-full bg-[#1e2333] border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                placeholder="••••••••"
               />
             </div>
 
-            <div>
-              <button
-                type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-black bg-amber-400 hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors"
-              >
-                Login
-              </button>
-            </div>
-          </form>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 px-4 rounded-md text-sm font-medium text-black bg-amber-400 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isLoading ? 'Signing in...' : 'Login'}
+            </button>
+          </div>
 
           <p className="mt-8 text-center text-sm text-gray-400">
-            Don't have an account already?{' '}
+            Don't have an account?{' '}
             <Link href="/register" className="font-medium text-amber-400 hover:text-amber-500">
               Register here
             </Link>
           </p>
-        </div>
-
+        </form>
 
         <div className="hidden md:block md:w-1/2 relative">
           <Image
             src="/images/login-bg.jpg"
-            alt="A collection of books"
+            alt="Login background"
             fill
-            className="object-cover"
+            priority
             sizes="50vw"
+            className="object-cover"
           />
         </div>
-
       </div>
     </div>
   );

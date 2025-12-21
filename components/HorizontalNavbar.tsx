@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FiHome, FiBookOpen, FiHeart, FiShoppingCart, FiUser, FiLogIn } from 'react-icons/fi';
+import { FiHome, FiBookOpen, FiHeart, FiUser, FiLogIn } from 'react-icons/fi';
 import { useAuth } from '@/context/AuthContext';
 
 const HorizontalNavbar = () => {
@@ -23,9 +23,6 @@ const HorizontalNavbar = () => {
         </Link>
         <Link href="/wishlist" className="text-gray-400 hover:text-white transition-colors" aria-label="Wishlist">
           <FiHeart size={22} />
-        </Link>
-        <Link href="/cart" className="text-gray-400 hover:text-white transition-colors" aria-label="Cart">
-          <FiShoppingCart size={22} />
         </Link>
         {isAuthenticated ? (
           <Link href="/profile" className="text-gray-400 hover:text-white transition-colors" aria-label="Profile">
