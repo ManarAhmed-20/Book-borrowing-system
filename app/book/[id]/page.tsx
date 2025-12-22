@@ -124,10 +124,6 @@ export default function BookDetailsPage() {
           <span>By {book.author}</span>
           <span className="hidden md:inline">|</span>
           <span>Category ID: {book.categoryId}</span>
-          <span className="hidden md:inline">|</span>
-          <span className="flex items-center gap-1 text-amber-400">
-            <FiStar className="fill-current" /> {book.rating || 0}/5
-          </span>
         </div>
         <div className="flex items-center gap-4 text-white font-semibold">
           <span className={isAvailable ? "text-green-400" : "text-red-400"}>
@@ -188,7 +184,7 @@ export default function BookDetailsPage() {
       </div>
       
       <div className="flex justify-center items-center">
-        <div className="w-[270px] h-[415px] bg-black rounded-2xl shadow-lg flex flex-col items-end gap-5">
+        <div className="w-[270px] h-[415px] bg-black rounded-4xl shadow-lg flex flex-col items-end gap-5">
           <div className="bg-red-200 w-[238px] h-[328px] relative overflow-hidden">
             <Image
               src={imageUrl}
@@ -199,7 +195,7 @@ export default function BookDetailsPage() {
               className="object-cover"
             />
           </div>
-          <div className="w-[240px] h-[45px] bg-white rounded-bl-full rounded-tl-full"></div>
+          <div className="w-[240px] h-[45px] bg-white rounded-bl-full rounded-br-3xl rounded-tl-full "></div>
         </div>
       </div>
     </div>

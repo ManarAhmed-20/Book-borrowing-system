@@ -1,34 +1,21 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
   },
-
   async rewrites() {
     return [
       {
-        source: '/proxy_api/:path*',
+        source: '/api/:path*',
         destination: 'http://smartlibrary.runasp.net/api/:path*',
       },
+      {
+        source: '/images/:path*',
+        destination: 'http://smartlibrary.runasp.net/images/:path*',
+      },
     ];
-  },
-
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'http',
-        hostname: 'smartlibrary.runasp.net',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-    ],
   },
 };
 

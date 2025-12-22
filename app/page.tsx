@@ -21,11 +21,18 @@ export default function HomePage() {
           categoryService.getAll()
         ]);
 
-        const baseUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'http://smartlibrary.runasp.net/';
-
         const formattedForSlider = booksData.slice(0, 5).map((book: ApiBook) => {
-          const filename = (book as any).imageUrl ? (book as any).imageUrl.split('/').pop() : '';
-          const resolvedImage = filename ? `${baseUrl}${filename}` : '/images/placeholder.jpg';
+          const rawUrl = (book as any).imageUrl;
+          let resolvedImage = '/images/placeholder.jpg';
+          
+          if (rawUrl) {
+            if (rawUrl.startsWith('http')) {
+              resolvedImage = rawUrl;
+            } else {
+              const filename = rawUrl.split('/').pop();
+              if (filename) resolvedImage = `/images/${filename}`;
+            }
+          }
 
           return {
             id: book.id.toString(),

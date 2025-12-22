@@ -151,6 +151,8 @@ export default function RegisterPage() {
             alt="Library background"
             fill
             className="object-cover"
+            sizes="(max-width: 768px) 100vw, 50vw"
+            priority
           />
         </div>
       </div>

@@ -23,8 +23,6 @@ interface FeaturedBookSliderProps {
 }
 
 const FeaturedBookSlider = ({ books }: FeaturedBookSliderProps) => {
-  const baseUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'http://smartlibrary.runasp.net/';
-
   return (
     <Swiper
       modules={[Autoplay, EffectFade]}
@@ -38,10 +36,15 @@ const FeaturedBookSlider = ({ books }: FeaturedBookSliderProps) => {
       className="w-full rounded-lg"
     >
       {books.map((book) => {
-        const filename = book.imageUrl.split('/').pop() || '';
-        const resolvedImage = filename
-          ? `${baseUrl}images/${filename}`
-          : '/images/placeholder.jpg';
+        let resolvedImage = '/images/placeholder.jpg';
+        if (book.imageUrl) {
+            if (book.imageUrl.startsWith('http')) {
+                resolvedImage = book.imageUrl;
+            } else {
+                const filename = book.imageUrl.split('/').pop();
+                if (filename) resolvedImage = `/images/${filename}`;
+            }
+        }
 
         return (
           <SwiperSlide key={book.id}>

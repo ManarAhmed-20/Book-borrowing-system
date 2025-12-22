@@ -9,7 +9,7 @@ interface BorrowedBookCardProps {
   borrowDate: Date;
   onReturn: () => void;
   disabled?: boolean;
-  categoryName?: string; 
+  categoryName?: string;
 }
 
 const getDaysDifference = (date1: Date, date2: Date) => {
@@ -28,13 +28,14 @@ const BorrowedBookCard = ({ book, borrowDate, onReturn, disabled, categoryName }
   const dueDateStart = new Date(dueDate.setHours(0, 0, 0, 0));
   const daysLeft = getDaysDifference(todayStart, dueDateStart);
 
-  const baseUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL?.replace(/\/$/, '') || '';
+  const getResolvedImage = (url?: string) => {
+    if (!url) return '/images/placeholder.jpg';
+    if (url.startsWith('http')) return url;
+    const filename = url.split('/').pop();
+    return filename ? `/images/${filename}` : '/images/placeholder.jpg';
+  };
 
-  const rawImage = book.image || book.imageUrl || '';
-  const cleanPath = rawImage.replace(/^\//, '');
-  const resolvedImage = rawImage
-    ? (rawImage.startsWith('http') ? rawImage : `${baseUrl}/${cleanPath}`)
-    : '/images/placeholder.jpg';
+  const resolvedImage = getResolvedImage(book.image || book.imageUrl);
 
   const renderStatus = () => {
     if (daysLeft > 0) {
@@ -60,6 +61,7 @@ const BorrowedBookCard = ({ book, borrowDate, onReturn, disabled, categoryName }
 
   return (
     <div className="bg-black/20 backdrop-blur-md border border-white/30 rounded-lg p-3 flex flex-col gap-3 shadow-lg h-full">
+      
       <div className="relative w-full h-48 rounded-md overflow-hidden flex-shrink-0">
         <Image
           src={resolvedImage}
@@ -80,7 +82,7 @@ const BorrowedBookCard = ({ book, borrowDate, onReturn, disabled, categoryName }
         <p className="text-xs text-gray-300 truncate">
           {book.author}
         </p>
-        <p className="text-[10px] text-blue-300/80 bg-blue-900/20 px-2 py-0.5 rounded-full w-fit mt-1">
+        <p className="text-xs text-blue-300/80 bg-blue-900/20 px-2 py-0.5 rounded-full w-fit mt-1">
           {categoryName || 'General'}
         </p>
       </div>
@@ -89,8 +91,8 @@ const BorrowedBookCard = ({ book, borrowDate, onReturn, disabled, categoryName }
         <div className="text-sm">
           {renderStatus()}
         </div>
-
-        <button
+        
+        <button 
           onClick={onReturn}
           disabled={disabled}
           className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-4 py-1.5 text-xs rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md whitespace-nowrap"

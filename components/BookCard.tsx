@@ -12,12 +12,16 @@ interface BookCardProps {
 }
 
 const BookCard = ({ id, title, author, imageUrl, price }: BookCardProps) => {
+  const getResolvedImage = (url: string) => {
+    if (!url) return '/images/placeholder.jpg';
+    if (url.startsWith('http')) return url;
 
-  const baseUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL?.replace(/\/$/, '') || '';
-  const cleanPath = imageUrl ? imageUrl.replace(/^\//, '') : '';
-  const resolvedImage = imageUrl
-    ? (imageUrl.startsWith('http') ? imageUrl : `${baseUrl}/${cleanPath}`)
-    : '/images/placeholder.jpg';
+    const filename = url.split('/').pop();
+    if (!filename) return '/images/placeholder.jpg';
+    return `/images/${filename}`;
+  };
+
+  const resolvedImage = getResolvedImage(imageUrl);
 
   return (
     <Link href={`/book/${id}`} className="group w-fit">

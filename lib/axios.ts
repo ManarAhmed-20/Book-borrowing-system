@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { authService } from '@/services/authService';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -10,7 +11,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
+      const token = authService.getToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -18,19 +19,6 @@ api.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
-);
-
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-       console.warn("Unauthorized (401) detected.");
-       if (typeof window !== 'undefined') {
-         localStorage.removeItem('token');
-       }
-    }
-    return Promise.reject(error);
-  }
 );
 
 export default api;
