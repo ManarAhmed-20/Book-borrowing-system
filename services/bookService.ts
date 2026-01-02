@@ -1,14 +1,18 @@
 import api from '@/lib/axios';
-import { ApiBook } from '@/types';
+// import { ApiBook } from '@/types';
 
 export const bookService = {
-  getAll: async () => {
-    const response = await api.get<ApiBook[]>('/Book');
+  async getRecommended() {
+    const response = await api.get('/Book/recommended');
     return response.data;
+  },
+  getAll: async () => {
+    const response = await api.get('/Book');
+      return response.data;
   },
 
   getById: async (id: string | number) => {
-    const response = await api.get<ApiBook>(`/Book/${id}`);
-    return response.data;
+    const response = await api.get(`/Book/${id}`);
+      return response.data;
   },
 };

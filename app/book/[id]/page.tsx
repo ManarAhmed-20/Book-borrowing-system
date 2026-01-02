@@ -14,7 +14,7 @@ import { ApiBook } from '@/types';
 export default function BookDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  
+
   const rawId = params?.id;
   const bookIdString = Array.isArray(rawId) ? rawId[0] : rawId;
   const bookId = bookIdString ? parseInt(bookIdString, 10) : 0;
@@ -52,20 +52,24 @@ export default function BookDetailsPage() {
       router.push('/login');
       return;
     }
-    
+
     if (!book || book.availableCopies <= 0 || !bookId) return;
 
     setProcessing(true);
     try {
-      await borrowService.borrowBook(bookId);
+      await borrowService.borrowBook(Number(book.id));
       await refreshBorrowedBooks();
       setBook(prev => prev ? { ...prev, availableCopies: prev.availableCopies - 1 } : null);
       alert("Book borrowed successfully!");
     } catch (err: any) {
       console.error(err);
-      const msg = err.response?.data?.message || err.response?.data || "Failed to borrow book.";
-      alert(msg);
-    } finally {
+      alert(
+        err.response?.data?.message ||
+        JSON.stringify(err.response?.data) ||
+        "Failed to borrow book."
+      );
+    }
+    finally {
       setProcessing(false);
     }
   };
@@ -93,9 +97,9 @@ export default function BookDetailsPage() {
       return;
     }
     if (!book) return;
-    
+
     const idStr = bookId.toString();
-    
+
     if (isInWishlist(idStr)) {
       removeFromWishlist(idStr);
     } else {
@@ -136,7 +140,7 @@ export default function BookDetailsPage() {
         <p className="text-gray-300 leading-relaxed max-w-lg mt-2">
           {book.description}
         </p>
-        
+
         {isBorrowed && currentBorrowedItem?.returnDate && (
           <div className="mt-6 p-4 bg-amber-900/30 border border-amber-600 rounded-lg text-amber-300">
             <p className="font-semibold">You have borrowed this book</p>
@@ -168,7 +172,7 @@ export default function BookDetailsPage() {
               {processing ? 'Processing...' : 'Borrow Now'}
             </button>
           )}
-          
+
           <button
             onClick={handleWishlistClick}
             className={`p-3 rounded-lg border-2 transition-colors
@@ -182,7 +186,7 @@ export default function BookDetailsPage() {
           </button>
         </div>
       </div>
-      
+
       <div className="flex justify-center items-center">
         <div className="w-[270px] h-[415px] bg-black rounded-4xl shadow-lg flex flex-col items-end gap-5">
           <div className="bg-red-200 w-[238px] h-[328px] relative overflow-hidden">

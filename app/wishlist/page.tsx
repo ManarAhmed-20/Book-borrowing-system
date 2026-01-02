@@ -6,68 +6,23 @@ import Image from 'next/image';
 import { FiTrash2, FiEye, FiBook } from 'react-icons/fi';
 import { useWishlist } from '@/context/WishlistContext';
 import { useAuth } from '@/context/AuthContext';
-import { bookService } from '@/services/bookService';
-import { categoryService, Category } from '@/services/categoryService';
-import { ApiBook } from '@/types';
 
 export default function WishlistPage() {
   const { favoriteBooks, removeFromWishlist, refreshWishlist } = useWishlist();
   const { isAuthenticated } = useAuth();
-  
-  const [booksDetails, setBooksDetails] = useState<ApiBook[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        try {
-          const cats = await categoryService.getAll();
-          setCategories(cats);
-        } catch (err) {
-          console.error(err);
-        }
-
-        const details = await Promise.all(
-          favoriteBooks.map(async (fav) => {
-            try {
-              const book = await bookService.getById(fav.bookId);
-              return book;
-            } catch {
-              return null;
-            }
-          })
-        );
-        setBooksDetails(details.filter((b): b is ApiBook => b !== null));
-
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (favoriteBooks.length > 0) {
-      fetchData();
-    } else {
-      setBooksDetails([]);
+    if (isAuthenticated) {
       setLoading(false);
     }
-  }, [favoriteBooks, isAuthenticated]);
+  }, [isAuthenticated, favoriteBooks]);
 
-  const getCategoryName = (id: number) => {
-    const cat = categories.find((c) => c.id === id);
-    return cat ? cat.name : id;
-  };
-
-  const getImageUrl = (imageUrl?: string) => {
-    const baseUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'http://smartlibrary.runasp.net/';
-    const filename = imageUrl ? imageUrl.split('/').pop() : '';
-    return filename ? `${baseUrl}images/${filename}` : '/images/placeholder.jpg';
+  const getResolvedImage = (url?: string) => {
+    if (!url) return '/images/placeholder.jpg';
+    if (url.startsWith('http')) return url;
+    if (url.startsWith('/')) return url;
+    return `/images/${url}`;
   };
 
   if (!isAuthenticated) {
@@ -94,7 +49,7 @@ export default function WishlistPage() {
           <div className="flex justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
           </div>
-        ) : booksDetails.length === 0 ? (
+        ) : favoriteBooks.length === 0 ? (
           <div className="text-center py-20 bg-black/60 rounded-xl border border-dashed border-gray-700">
             <FiBook size={48} className="mx-auto text-gray-500 mb-4" />
             <p className="text-xl text-gray-300">Your wishlist is empty!</p>
@@ -106,14 +61,14 @@ export default function WishlistPage() {
         ) : (
           <div className="grid md:grid-cols-3 gap-6 md:gap-8">
             <div className="md:col-span-2 space-y-4">
-              {booksDetails.map((book, index) => (
+              {favoriteBooks.map((book: any, index: number) => (
                 <div
-                  key={book.id}
+                  key={book.bookId || index}
                   className="bg-black/20 backdrop-blur-md border border-white/30 rounded-lg p-3 sm:p-4 flex gap-3 sm:gap-4 shadow-lg hover:shadow-xl transition-all"
                 >
                   <div className="relative w-20 h-28 sm:w-24 sm:h-36 flex-shrink-0 rounded-lg overflow-hidden bg-gray-800">
                     <Image
-                      src={getImageUrl(book.image || book.imageUrl)}
+                      src={getResolvedImage(book.imageUrl)}
                       alt={book.title}
                       fill
                       className="object-cover"
@@ -137,21 +92,21 @@ export default function WishlistPage() {
                           {book.availableCopies > 0 ? 'In Stock' : 'Out of Stock'}
                         </span>
                         <span className="bg-blue-500/20 text-blue-300 px-2 py-0.5 sm:py-1 rounded-full truncate max-w-[100px]">
-                           {getCategoryName(book.categoryId)}
+                           {book.categoryName || 'General'}
                         </span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2 sm:gap-3 mt-3 sm:mt-4">
                       <Link
-                        href={`/book/${book.id}`}
+                        href={`/book/${book.bookId}`}
                         className="flex items-center gap-1.5 sm:gap-2 bg-amber-500 hover:bg-amber-600 text-black px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition flex-1 justify-center"
                       >
                         <FiEye className="w-3 h-3 sm:w-4 sm:h-4" /> View & Borrow
                       </Link>
 
                       <button
-                        onClick={() => removeFromWishlist(book.id.toString())}
+                        onClick={() => removeFromWishlist(book.bookId.toString())}
                         className="flex items-center gap-2 bg-white/10 hover:bg-red-600/80 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition border border-white/5"
                         title="Remove from wishlist"
                       >
@@ -170,12 +125,12 @@ export default function WishlistPage() {
                 <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
                   <div className="flex justify-between items-center text-gray-300 pb-3 sm:pb-4 border-b border-gray-700 text-sm sm:text-base">
                     <span>Total Books</span>
-                    <span className="font-bold text-white">{booksDetails.length}</span>
+                    <span className="font-bold text-white">{favoriteBooks.length}</span>
                   </div>
                   <div className="flex justify-between items-center text-gray-300 text-sm sm:text-base">
                     <span>Available to Borrow</span>
                     <span className="text-gray-300 font-bold">
-                      {booksDetails.filter(b => b.availableCopies > 0).length}
+                      {favoriteBooks.filter((b: any) => b.availableCopies > 0).length}
                     </span>
                   </div>
                 </div>

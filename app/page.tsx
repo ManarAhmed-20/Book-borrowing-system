@@ -6,7 +6,6 @@ import Image from 'next/image';
 import FeaturedBookSlider from '@/components/FeaturedBookSlider';
 import { bookService } from '@/services/bookService';
 import { categoryService, Category } from '@/services/categoryService';
-import { ApiBook } from '@/types';
 
 export default function HomePage() {
   const [featuredBooks, setFeaturedBooks] = useState<any[]>([]);
@@ -16,13 +15,13 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [booksData, categoriesData] = await Promise.all([
-          bookService.getAll(),
+        const [recommendedData, categoriesData] = await Promise.all([
+          bookService.getRecommended(),
           categoryService.getAll()
         ]);
 
-        const formattedForSlider = booksData.slice(0, 5).map((book: ApiBook) => {
-          const rawUrl = (book as any).imageUrl;
+        const formattedForSlider = recommendedData.map((book: any) => {
+          const rawUrl = book.imageUrl;
           let resolvedImage = '/images/placeholder.jpg';
           
           if (rawUrl) {
@@ -38,9 +37,9 @@ export default function HomePage() {
             id: book.id.toString(),
             title: book.title,
             author: book.author,
-            imageUrl: resolvedImage,
+            imageUrl: resolvedImage, 
             description: book.description,
-            category: book.categoryId.toString(),
+            category: book.categoryName || 'General', 
           };
         });
 
