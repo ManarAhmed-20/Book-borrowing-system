@@ -23,21 +23,21 @@ export const borrowService = {
   async borrowBook(bookId: number) {
     try {
       const idToSend = Number(bookId);
-      console.log("🔵 Sending Borrow Request for Book ID:", idToSend);
+      console.log("Sending Borrow Request for Book ID:", idToSend);
 
       const response = await api.post('/Borrow', { 
         bookId: idToSend 
       });
       
-      console.log("🟢 Borrow Success:", response.data);
+      console.log("Borrow Success:", response.data);
       return response.data;
 
     } catch (error: any) {
-      console.error("🔴 Borrow Failed!");
+      console.error("Borrow Failed!");
 
       if (error.response) {
-        console.error("❌ Server Response Data:", error.response.data);
-        console.error("❌ Server Status:", error.response.status);
+        console.error("Server Response Data:", error.response.data);
+        console.error("Server Status:", error.response.status);
         
         if (error.response.data && (error.response.data.message || typeof error.response.data === 'string')) {
             throw error.response.data;
