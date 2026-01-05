@@ -5,9 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/services/authService';
+import { useAuth } from '@/context/AuthContext';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { login } = useAuth();
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -41,11 +43,15 @@ export default function RegisterPage() {
       const { confirmPassword, ...registerData } = formData;
       await authService.register(registerData);
       
-      alert('Account created successfully! Please login.');
-      router.push('/login');
+      await login({
+        email: formData.email,
+        password: formData.password
+      });
+
+      router.push('/');
       
     } catch (err: any) {
-      console.log("Registration Error:", err.response?.data);
+      console.log("Registration/Login Error:", err.response?.data);
 
       let errorMsg = 'Something went wrong. Please try again.';
 
@@ -68,8 +74,7 @@ export default function RegisterPage() {
       }
 
       setError(errorMsg);
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); 
     }
   };
 
@@ -133,7 +138,7 @@ export default function RegisterPage() {
               disabled={isLoading}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-black bg-amber-400 hover:bg-amber-500 transition-colors mt-6 disabled:opacity-50"
             >
-              {isLoading ? 'Creating Account...' : 'Sign Up'}
+              {isLoading ? 'Creating Account & Logging in...' : 'Sign Up'}
             </button>
           </form>
 
