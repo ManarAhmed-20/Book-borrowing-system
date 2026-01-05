@@ -13,16 +13,23 @@ export default function WishlistPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && favoriteBooks) {
       setLoading(false);
     }
   }, [isAuthenticated, favoriteBooks]);
 
-  const getResolvedImage = (url?: string) => {
+  const getResolvedImage = (url: string) => {
     if (!url) return '/images/placeholder.jpg';
+
     if (url.startsWith('http')) return url;
-    if (url.startsWith('/')) return url;
-    return `/images/${url}`;
+
+    const baseUrl = 'http://smartlibrary.runasp.net';
+
+    if (url.startsWith('/')) {
+        return `${baseUrl}${url}`;
+    }
+
+    return `${baseUrl}/images/${url}`;
   };
 
   if (!isAuthenticated) {

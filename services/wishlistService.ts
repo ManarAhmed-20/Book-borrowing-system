@@ -1,17 +1,17 @@
-import api from '@/lib/axios'; 
+import api from '@/lib/axios';
 
 export const wishlistService = {
-  getWishlist: async () => {
-    const response = await api.get('/User/profile');
-    return response.data.favoriteBooks || [];
+  async getWishlist() {
+    const response = await api.get('/Favorite'); 
+    return response.data;
   },
 
-  addToWishlist: async (bookId: string | number) => {
+  async addToWishlist(bookId: string) {
     const response = await api.post(`/Favorite/${bookId}`);
     return response.data;
   },
 
-  removeFromWishlist: async (bookId: string | number) => {
+  async removeFromWishlist(bookId: string) {
     const response = await api.delete(`/Favorite/${bookId}`);
     return response.data;
   }

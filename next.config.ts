@@ -1,10 +1,16 @@
-const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'smartlibrary.runasp.net',
+        pathname: '/images/**',
+      },
+    ],
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+
   async rewrites() {
     return [
       {
